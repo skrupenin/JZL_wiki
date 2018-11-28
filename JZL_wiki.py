@@ -1,7 +1,10 @@
 import requests
 
-# по фамилии героя получить данные из WikiData при помощи прямого SPARQL запроса
 def getPersonData(humanName):
+    """
+    по фамилии героя получить данные из WikiData при помощи прямого SPARQL запроса
+    """
+
     url = 'https://query.wikidata.org/sparql'
     query="""
     PREFIX wdno: <http://www.wikidata.org/prop/novalue/>
@@ -22,11 +25,14 @@ def getPersonData(humanName):
     r = requests.get(url, params = {'format': "json", 'query': query.replace("_humanName", humanName)})
     return r.json()
 
-# из названия файла выделяет фамилию.
-# форматы названий файлов:
-#   Адмирал Нельсон (Владимир Шигин) - 2010.fb2
-#   Адам Смит. Его жизнь и научная деятельность (Валентин Яковенко).fb2
+
 def getHero(fName):
+    """
+    из названия файла выделяет фамилию.
+    форматы названий файлов:
+       Адмирал Нельсон (Владимир Шигин) - 2010.fb2
+       Адам Смит. Его жизнь и научная деятельность (Валентин Яковенко).fb2
+    """
     p=fName.find(". Его")
     if p==-1: p=fName.find("(")-1
     if p<=-1: return ""
@@ -35,10 +41,12 @@ def getHero(fName):
 import pprint
 import sys
 
-# разбирает входящий JSON и форматирует строку с выводными данными
-# пример JSON: {'head': {'vars': ['human', 'humanLabel', 'humanDescription', 'BirthDate', 'StartDate', 'article']}, 'results': {'bindings': [{'human': {'type': 'uri', 'value': 'http://www.wikidata.org/entity/Q132682'}, 'article': {'type': 'uri', 'value': 'https://ru.wikipedia.org/wiki/%D0%9C%D1%83%D1%81%D0%BE%D1%80%D0%B3%D1%81%D0%BA%D0%B8%D0%B9,_%D0%9C%D0%BE%D0%B4%D0%B5%D1%81%D1%82_%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%B2%D0%B8%D1%87'}, 'BirthDate': {'datatype': 'http://www.w3.org/2001/XMLSchema#dateTime', 'type': 'literal', 'value': '1839-03-09T00:00:00Z'}, 'humanLabel': {'xml:lang': 'ru', 'type': 'literal', 'value': 'Модест Петрович Мусоргский'}, 'humanDescription': {'xml:lang': 'ru', 'type': 'literal', 'value': 'русский композитор'}}]}}
-# если герой не найден -- то JSON выглядит так: {'head': {'vars': ['human', 'humanLabel', 'humanDescription', 'BirthDate', 'StartDate', 'article']}, 'results': {'bindings': []}}
 def parsePersonData(b):
+    """
+    разбирает входящий JSON и форматирует строку с выводными данными
+    пример JSON: {'head': {'vars': ['human', 'humanLabel', 'humanDescription', 'BirthDate', 'StartDate', 'article']}, 'results': {'bindings': [{'human': {'type': 'uri', 'value': 'http://www.wikidata.org/entity/Q132682'}, 'article': {'type': 'uri', 'value': 'https://ru.wikipedia.org/wiki/%D0%9C%D1%83%D1%81%D0%BE%D1%80%D0%B3%D1%81%D0%BA%D0%B8%D0%B9,_%D0%9C%D0%BE%D0%B4%D0%B5%D1%81%D1%82_%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%B2%D0%B8%D1%87'}, 'BirthDate': {'datatype': 'http://www.w3.org/2001/XMLSchema#dateTime', 'type': 'literal', 'value': '1839-03-09T00:00:00Z'}, 'humanLabel': {'xml:lang': 'ru', 'type': 'literal', 'value': 'Модест Петрович Мусоргский'}, 'humanDescription': {'xml:lang': 'ru', 'type': 'literal', 'value': 'русский композитор'}}]}}
+    если герой не найден -- то JSON выглядит так: {'head': {'vars': ['human', 'humanLabel', 'humanDescription', 'BirthDate', 'StartDate', 'article']}, 'results': {'bindings': []}}
+    """
     b=b[0]
     r=""
     items=['humanLabel','humanDescription','BirthDate','StartDate','article']
@@ -64,16 +72,20 @@ import datetime
 
 startDir = "/Users/sergey_krupeninepam.com/Desktop/ЖЗЛ"
 
-# итератор по иерархии директорий. Возвращает полные названия файлов
-# r=root, d=directories, f=files
 def crawlFiles(walkDir):
+    """
+    итератор по иерархии директорий. Возвращает полные названия файлов
+    r=root, d=directories, f=files
+    """
     for r, d, f in os.walk(walkDir):
         if r!=walkDir: print(r)
         for file in f:
                 yield((r, file))
 
-# итератор по героям -- надстройка над итератором по иерархии директорий. Возвращает строку для выводного файла                
 def crawlPersons(startDir):    
+    """
+    итератор по героям -- надстройка над итератором по иерархии директорий. Возвращает строку для выводного файла                
+    """
     for fName in crawlFiles(startDir):
         name=getHero(fName[1])
         data=getPersonData(name)
